@@ -18,7 +18,17 @@ const pieceMap = {
   'p': 'pawn'
 }
 
-let turn = 'w';
+let visibilityMask = [
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1]
+]
+
 let selectedPiece = null;
 
 function populateBoard() {
@@ -49,12 +59,74 @@ function placePieces() {
   }
 }
 
+function updatePieces() {
+  var board = document.getElementById('board');
+  var squares = board.getElementsByClassName('cell');
+  for (let i = 0; i < 64; i++) {
+    if (squares[i].getElementsByClassName('piece').length === 0 && position[Math.floor(i / 8)][i % 8] !== ' ') {
+      var piece = document.createElement('img');
+      const pieceText = position[Math.floor(i / 8)][i % 8];
+      const pieceIsDark = pieceText.toLowerCase() === pieceText;
+      piece.src = `assets/${pieceIsDark ? 'black' : 'white'}-${pieceMap[pieceText.toLowerCase()]}.png`;
+      piece.className = 'piece';
+      squares[i].appendChild(piece);
+    }
+    else if (squares[i].getElementsByClassName('piece').length > 0 && position[Math.floor(i / 8)][i % 8] === ' ') {
+      squares[i].removeChild(squares[i].getElementsByClassName('piece')[0]);
+    } else if (squares[i].getElementsByClassName('piece').length > 0) {
+      const piece = squares[i].getElementsByClassName('piece')[0];
+      const pieceText = position[Math.floor(i / 8)][i % 8];
+      const pieceIsDark = pieceText.toLowerCase() === pieceText;
+      piece.src = `assets/${pieceIsDark ? 'black' : 'white'}-${pieceMap[pieceText.toLowerCase()]}.png`;
+    }
+  }
+}
+
+function updateVisibility() {
+  return;
+  var board = document.getElementById('board');
+  var squares = board.getElementsByClassName('cell');
+  for (let i = 0; i < 64; i++) {
+    if (squares[i].getElementsByClassName('piece').length === 0) {
+      continue;
+    } 
+    let piece = squares[i].getElementsByClassName('piece')[0];
+    
+    piece.setAttribute('style', `visibility: ${visibilityMask[Math.floor(i / 8)][i % 8] === 1 ? 'visible' : 'hidden'}`);
+  }
+}
+
+function determineAllegienceSwitch() {
+  if (Math.random() < 1.25) {
+    let whitePieceIndices = [];
+    for (let i = 0; i < 64; i++) {
+      if (position[Math.floor(i / 8)][i % 8] !== ' ' && position[Math.floor(i / 8)][i % 8].toLowerCase() !== position[Math.floor(i / 8)][i % 8]) {
+        whitePieceIndices.push(i);
+      }
+    }
+
+    let randomIndex = whitePieceIndices[Math.floor(Math.random() * whitePieceIndices.length)];
+    let piece = document.getElementsByClassName('cell')[randomIndex].getElementsByClassName('piece')[0];
+    let pieceText = position[Math.floor(randomIndex / 8)][randomIndex % 8];
+
+    position[Math.floor(randomIndex / 8)][randomIndex % 8] = pieceText.toLowerCase();
+    updatePieces();
+  }
+}
+
 function squareClicked() {
   const square = this;
   if (selectedPiece === null) {
     if (square.getElementsByClassName('piece').length === 0) {
       return;
     }
+
+    const piece = square.getElementsByClassName('piece')[0];
+    const pieceIsDark = piece.src.includes('black');
+    if (pieceIsDark) {
+      return;
+    }
+
     selectedPiece = square;
     square.classList.add('selected');
   }
@@ -66,22 +138,53 @@ function squareClicked() {
     }
 
     if (isValidMove(square, selectedPiece)) {
+      // Update position array
       const piece = selectedPiece.getElementsByClassName('piece')[0];
-      square.innerHTML = '';
-      square.appendChild(piece);
-      selectedPiece.innerHTML = '';
+      const pieceText = piece.src.split('/').pop().split('.')[0].split('-')[1];
+      const pieceRow = Math.floor(Array.from(selectedPiece.parentNode.children).indexOf(selectedPiece) / 8);
+      const pieceCol = Array.from(selectedPiece.parentNode.children).indexOf(selectedPiece) % 8;
+      const squareRow = Math.floor(Array.from(square.parentNode.children).indexOf(square) / 8);
+      const squareCol = Array.from(square.parentNode.children).indexOf(square) % 8;
+
+      position[squareRow][squareCol] = position[pieceRow][pieceCol];
+      position[pieceRow][pieceCol] = ' ';
+
       selectedPiece.classList.remove('selected');
       selectedPiece = null;
 
-      fetch('api/move/', {
+      updatePieces();
+
+      fetch('http://localhost:8000/api/move/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://github.com'
         },
         body: JSON.stringify({
           position: position,
         })
       })
+        .then(response => response.json())
+        .then(data => {
+          let move = data.move;
+          let start = move.substring(0, 2);
+          let end = move.substring(2, 4);
+
+          let startCol = start.charCodeAt(0) - 97;
+          let startRow = 8 - parseInt(start[1]);
+          let endCol = end.charCodeAt(0) - 97;
+          let endRow = 8 - parseInt(end[1]);
+
+          position[endRow][endCol] = position[startRow][startCol];
+          position[startRow][startCol] = ' ';
+
+          updatePieces();
+        });
+
+      // Randomize Visibility mask
+      visibilityMask = visibilityMask.map(row => row.map(() => Math.random() < 0.5 ? 0 : 1));
+      //updateVisibility();
+      //determineAllegienceSwitch();
     }
   }
 }
