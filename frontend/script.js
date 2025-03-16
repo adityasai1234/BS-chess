@@ -271,7 +271,9 @@ function updateSmackTalk() {
 
 function changePlayerSide() {
   if (Math.random() < 0.1) {
-    position = position.map(row => row.map(piece => piece === ' ' ? ' ' : (piece.toLowerCase() === piece ? piece.toUpperCase() : piece.toLowerCase())));
+    position = position.map(row => row.map(piece => 
+      piece === ' ' ? ' ' : 
+        (piece.toLowerCase() === piece ? piece.toUpperCase() : piece.toLowerCase())));
     playerSide = playerSide === 'white' ? 'black' : 'white';
     fetch('/api/side', {method: 'PUT'})
     updatePieces();
