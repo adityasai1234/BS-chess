@@ -180,8 +180,8 @@ def process_game(game, num_positions, image_dir=None):
             if image_dir:
                 save_board_image(board, os.path.join(image_dir, f"position_{len(X)-1}.png"))
             
-            # Add random legal moves
-            random_moves = np.random.choice(legal_moves, min(2, len(legal_moves)), replace=False)
+            # Add random legal moves (increased from 2 to 3)
+            random_moves = np.random.choice(legal_moves, min(3, len(legal_moves)), replace=False)
             for random_move in random_moves:
                 if random_move != correct_move:
                     random_move_tensor = create_move_representation(random_move, board)
@@ -193,10 +193,40 @@ def process_game(game, num_positions, image_dir=None):
                     if image_dir:
                         save_board_image(board, os.path.join(image_dir, f"position_{len(X)-1}.png"))
             
-            # Generate illegal moves
-            for _ in range(2):
-                random_square = np.random.randint(64)
-                random_move = chess.Move(random_square, np.random.randint(64))
+            # Generate illegal moves (increased from 2 to 4)
+            for _ in range(4):
+                # Generate different types of illegal moves
+                move_type = np.random.randint(3)
+                
+                if move_type == 0:
+                    # Random square to random square
+                    random_square = np.random.randint(64)
+                    random_move = chess.Move(random_square, np.random.randint(64))
+                elif move_type == 1:
+                    # Move from empty square
+                    empty_squares = [sq for sq in chess.SQUARES if board.piece_at(sq) is None]
+                    if empty_squares:
+                        from_square = np.random.choice(empty_squares)
+                        random_move = chess.Move(from_square, np.random.randint(64))
+                    else:
+                        continue
+                else:
+                    # Move to occupied square of same color
+                    piece_squares = [sq for sq in chess.SQUARES if board.piece_at(sq) is not None]
+                    if piece_squares:
+                        from_square = np.random.choice(piece_squares)
+                        piece = board.piece_at(from_square)
+                        same_color_squares = [sq for sq in chess.SQUARES 
+                                            if board.piece_at(sq) and 
+                                            board.piece_at(sq).color == piece.color]
+                        if same_color_squares:
+                            to_square = np.random.choice(same_color_squares)
+                            random_move = chess.Move(from_square, to_square)
+                        else:
+                            continue
+                    else:
+                        continue
+                
                 if random_move not in legal_moves:
                     random_move_tensor = create_move_representation(random_move, board)
                     X.append(np.concatenate([board_tensor, random_move_tensor], axis=-1))
