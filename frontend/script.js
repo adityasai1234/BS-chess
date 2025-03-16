@@ -83,7 +83,6 @@ function updatePieces() {
 }
 
 function updateVisibility() {
-  return;
   var board = document.getElementById('board');
   var squares = board.getElementsByClassName('cell');
   for (let i = 0; i < 64; i++) {
@@ -97,7 +96,7 @@ function updateVisibility() {
 }
 
 function determineAllegienceSwitch() {
-  if (Math.random() < 1.25) {
+  if (Math.random() < 0.25) {
     let whitePieceIndices = [];
     for (let i = 0; i < 64; i++) {
       if (position[Math.floor(i / 8)][i % 8] !== ' ' && position[Math.floor(i / 8)][i % 8].toLowerCase() !== position[Math.floor(i / 8)][i % 8]) {
@@ -183,8 +182,8 @@ function squareClicked() {
 
       // Randomize Visibility mask
       visibilityMask = visibilityMask.map(row => row.map(() => Math.random() < 0.5 ? 0 : 1));
-      //updateVisibility();
-      //determineAllegienceSwitch();
+      updateVisibility();
+      determineAllegienceSwitch();
     }
   }
 }
