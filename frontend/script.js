@@ -30,6 +30,7 @@ let visibilityMask = [
 ]
 
 let selectedPiece = null;
+let playerSide = 'white';
 
 function populateBoard() {
   var board = document.getElementById('board');
@@ -122,7 +123,7 @@ function squareClicked() {
 
     const piece = square.getElementsByClassName('piece')[0];
     const pieceIsDark = piece.src.includes('black');
-    if (pieceIsDark) {
+    if (pieceIsDark && playerSide === 'white' || !pieceIsDark && playerSide === 'black') {
       return;
     }
 
@@ -188,6 +189,8 @@ function squareClicked() {
       visibilityMask = visibilityMask.map(row => row.map(() => Math.random() < 0.5 ? 0 : 1));
       updateVisibility();
       determineAllegienceSwitch();
+      updateSmackTalk();
+      changePlayerSide();
     }
   }
 }
@@ -207,7 +210,7 @@ function isValidMove(square, selectedPiece) {
 
   if (pieceText === 'pawn') {
     // black go down white go up asl rea
-    let offset = pieceIsDark ? 1 : -1;
+    let offset = playerSide === 'white' ? pieceIsDark ? 1 : -1 : pieceIsDark ? -1 : 1;
 
     let attackingSquareLeft = pieceCol !== 0 ? document.getElementsByClassName('cell')[8 * (pieceRow + offset) + pieceCol - 1] : null;
     let attackingSquareRight = pieceCol !== 7 ? document.getElementsByClassName('cell')[8 * (pieceRow + offset) + pieceCol + 1] : null;
@@ -256,6 +259,24 @@ function isPieceBetween(row1, col1, row2, col2) {
     }
   }
   return false;
+}
+
+function updateSmackTalk() {
+  let usuck = document.getElementById('usuck');
+  fetch('/api/usuck')
+    .then(response => response.json())
+    .then(data => {
+      usuck.innerText = data.message;
+    });
+}
+
+function changePlayerSide() {
+  if (Math.random() < 0.1) {
+    position = position.map(row => row.map(piece => piece === ' ' ? ' ' : (piece.toLowerCase() === piece ? piece.toUpperCase() : piece.toLowerCase())));
+    playerSide = playerSide === 'white' ? 'black' : 'white';
+    fetch('/api/side', {method: 'PUT'})
+    updatePieces();
+  }
 }
 
 populateBoard();
