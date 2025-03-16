@@ -83,6 +83,7 @@ function updatePieces() {
 }
 
 function updateVisibility() {
+  return;
   var board = document.getElementById('board');
   var squares = board.getElementsByClassName('cell');
   for (let i = 0; i < 64; i++) {
@@ -153,20 +154,37 @@ function squareClicked() {
 
       updatePieces();
 
-      fetch('api/move/', {
+      fetch('http://localhost:8000/api/move/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Origin': 'https://github.com'
         },
         body: JSON.stringify({
           position: position,
         })
       })
+        .then(response => response.json())
+        .then(data => {
+          let move = data.move;
+          let start = move.substring(0, 2);
+          let end = move.substring(2, 4);
+
+          let startCol = start.charCodeAt(0) - 97;
+          let startRow = 8 - parseInt(start[1]);
+          let endCol = end.charCodeAt(0) - 97;
+          let endRow = 8 - parseInt(end[1]);
+
+          position[endRow][endCol] = position[startRow][startCol];
+          position[startRow][startCol] = ' ';
+
+          updatePieces();
+        });
 
       // Randomize Visibility mask
       visibilityMask = visibilityMask.map(row => row.map(() => Math.random() < 0.5 ? 0 : 1));
-      updateVisibility();
-      determineAllegienceSwitch();
+      //updateVisibility();
+      //determineAllegienceSwitch();
     }
   }
 }
