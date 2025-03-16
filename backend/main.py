@@ -1,6 +1,7 @@
 from typing import Annotated, Any
 from fastapi import Body, FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import FileResponse
 import bot 
 import chess
 from google import genai
@@ -18,6 +19,12 @@ app.mount("/app", StaticFiles(directory="frontend"), name="static")
 api = FastAPI(root_path="/api")
 
 opponent_side = 'b'
+
+@app.get('/app')
+async def index():
+    global opponent_side
+    opponent_side = 'b'
+    return FileResponse('frontend/index.html')
 
 @api.post("/move")
 async def move(board: Annotated[Any, Body()]):
