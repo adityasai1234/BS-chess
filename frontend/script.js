@@ -166,6 +166,10 @@ function squareClicked() {
         .then(response => response.json())
         .then(data => {
           let move = data.move;
+          if (move === 'resign') {
+            alert('You win (wattesigma)!');
+          }
+
           let start = move.substring(0, 2);
           let end = move.substring(2, 4);
 

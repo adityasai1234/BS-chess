@@ -1,7 +1,7 @@
 from typing import Annotated, Any
 from fastapi import Body, FastAPI
 from fastapi.staticfiles import StaticFiles
-import ai
+import bot 
 import chess
 
 app = FastAPI()
@@ -9,12 +9,10 @@ app = FastAPI()
 app.mount("/app", StaticFiles(directory="frontend"), name="static")
 api = FastAPI(root_path="/api")
 
-model = ai.ChessAI()
-
 @api.post("/move")
 async def move(board: Annotated[Any, Body()]):
     return {
-        "move": model.get_ai_move(chess.Board(make_fen(board['position']))).replace('-', '')
+        "move": bot.get_ai_move(chess.Board(make_fen(board['position']))).replace('-', '')
     }
 
 def make_fen(position: list[list[str]]) -> str:

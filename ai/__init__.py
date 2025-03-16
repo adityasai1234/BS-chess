@@ -1,1 +1,0 @@
-from .mainai import ChessAI
