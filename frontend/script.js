@@ -157,8 +157,7 @@ function squareClicked() {
       fetch('/api/move/', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Origin': 'https://github.com'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           position: position,
