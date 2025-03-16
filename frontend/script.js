@@ -153,7 +153,7 @@ function squareClicked() {
 
       updatePieces();
 
-      fetch('http://localhost:8000/api/move/', {
+      fetch('/api/move/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
