@@ -49,13 +49,6 @@ function placePieces() {
   }
 }
 
-// How pieces will be moved:
-// 1. Click on a piece
-// 2. Click on a square to move the piece to
-// 3. If the move is valid, move the piece
-// 4. If the move is invalid, do nothing
-// 5. Change the turn
-// 6. Repeat
 function squareClicked() {
   const square = this;
   if (selectedPiece === null) {
@@ -79,6 +72,16 @@ function squareClicked() {
       selectedPiece.innerHTML = '';
       selectedPiece.classList.remove('selected');
       selectedPiece = null;
+
+      fetch('api/move/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          position: position,
+        })
+      })
     }
   }
 }
@@ -97,18 +100,15 @@ function isValidMove(square, selectedPiece) {
   const squarePiece = square.getElementsByClassName('piece').length > 0 ? square.getElementsByClassName('piece')[0] : null;
 
   if (pieceText === 'pawn') {
+    // black go down white go up asl rea
     let offset = pieceIsDark ? 1 : -1;
 
     let attackingSquareLeft = pieceCol !== 0 ? document.getElementsByClassName('cell')[8 * (pieceRow + offset) + pieceCol - 1] : null;
     let attackingSquareRight = pieceCol !== 7 ? document.getElementsByClassName('cell')[8 * (pieceRow + offset) + pieceCol + 1] : null;
 
-    if (squarePiece === null) {
-      if (squareRow === pieceRow + offset && squareCol === pieceCol) {
-        return true;
-      }
-    } else {
-      return (square === attackingSquareLeft || square === attackingSquareRight) && (squarePiece.src.includes(pieceIsDark ? 'white' : 'black'));
-    }
+    return squarePiece === null ? 
+      squareRow === pieceRow + offset && squareCol === pieceCol : 
+      (square === attackingSquareLeft || square === attackingSquareRight) && (squarePiece.src.includes(pieceIsDark ? 'white' : 'black'));
   } else if (pieceText === 'rook') {
     return (squareRow === pieceRow || squareCol === pieceCol) && 
       (squareRow !== pieceRow || squareCol !== pieceCol) && 
